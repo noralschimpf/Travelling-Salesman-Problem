@@ -1,7 +1,7 @@
 import numpy as np
 import tqdm
 import itertools
-from utils import euclidean_distance as euclid
+from utils import euclid_partial as euclid
 
 def RandomApproach(data: np.array):
     soln = np.zeros_like(data)
@@ -36,23 +36,11 @@ def BruteForce(data: np.array):
     soln[:,1:] = [data[np.where(data == soln[x,0])[0],1:] for x in range(soln.shape[0])]
     return soln
 
-
-def permutations(rows: np.array):
-    if len(rows) == 1:
-        return rows
-    perms = []
-    for item in rows:
-        remaining_elements = [x for x in rows if x != item]
-        perm_sublist = permutations(remaining_elements)
-        for subitem in perm_sublist: perms.append(subitem)
-    return perms
-
 def CleanerBruteForce(data: np.array):
     soln = np.zeros_like(data)
 
     # generate a matrix of all permutations of points
     gen_perm = itertools.permutations(data[:, 0])
-    # perms = permutations(data[:,0])
     gen_destruct = itertools.permutations(data[:, 0])
     gen_length = sum(1 for ignore in gen_destruct)
     del gen_destruct
@@ -60,10 +48,26 @@ def CleanerBruteForce(data: np.array):
     # find the minimum cost of all permutations
     costs = np.full((gen_length), fill_value=np.nan)
     for i, permutation in tqdm.tqdm(enumerate(gen_perm), total=gen_length):
-    # for i, permutation in tqdm.tqdm(enumerate(perms), total=gen_length):
         tmp_soln = np.zeros_like(soln)
         tmp_soln[:, 0] = permutation
         tmp_soln[:, 1:] = [data[np.where(data == tmp_soln[x, 0])[0], 1:] for x in range(tmp_soln.shape[0])]
         costs[i] = euclid(tmp_soln)
         if np.nanmin(costs) == costs[i]: soln = tmp_soln
+    return soln
+
+def OptimizedBruteForce(data: np.array):
+    soln = np.zeros_like(data)
+
+    # generate a matrix of all permutations of points
+    gen_perm = itertools.permutations(data[:, 0].astype(int))
+    gen_destruct = itertools.permutations(data[:, 0].astype(int))
+    perm_length = sum(1 for ignore in gen_destruct)
+    del gen_destruct
+
+    # find the minimum cost of all permutations
+    min_cost = np.nan
+    for i, permutation in tqdm.tqdm(enumerate(gen_perm), total=perm_length):
+        tmp_soln = data[[x-1 for x in permutation]]
+        cost = euclid(tmp_soln)
+        if cost < min_cost or np.isnan(min_cost): min_cost = cost; soln = tmp_soln
     return soln

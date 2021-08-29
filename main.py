@@ -14,13 +14,13 @@ def main(algo):
         dict_data = dl.load_tsp(os.path.join(datadir,files[f]))
         print(dict_data['NAME'])
         traceflag = f <= 4
-        # if traceflag: tracemalloc.start()
+        if traceflag: tracemalloc.start()
         sttime = time.time()
-        # if traceflag: stcur, stpeak = tracemalloc.get_traced_memory()
+        if traceflag: stcur, stpeak = tracemalloc.get_traced_memory()
         opt_soln = algo(dict_data['data'])
-        # if traceflag:
-        #     edcur, edpeak = tracemalloc.get_traced_memory()
-        edpeak = -1000
+        if traceflag:
+            edcur, edpeak = tracemalloc.get_traced_memory()
+        else: edpeak = -1000
         edtime = time.time()
         tracemalloc.stop()
 
@@ -37,4 +37,4 @@ def main(algo):
 
 
 if __name__ == '__main__':
-    main(alg_simple.CleanerBruteForce)
+    main(alg_simple.OptimizedBruteForce)

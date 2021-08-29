@@ -1,5 +1,6 @@
 import numpy as np, matplotlib.pyplot as plt, os
 import re
+from numba import jit
 
 def sortByComplexity(files: list):
     """
@@ -28,6 +29,21 @@ def euclidean_distance(soln: np.array):
         path_dist = 0.
         if i == soln.shape[0] - 1: path_dist = np.sqrt((soln[0,1] - soln[i,1])**2 + (soln[0,2] - soln[i,2])**2)
         else: path_dist = np.sqrt((soln[i+1,1] - soln[i,1])**2 + (soln[i+1,2] - soln[i,2])**2)
+        dist += path_dist
+    return dist
+
+@jit(nopython=True)
+def euclid_partial(soln: np.array):
+    """
+    Computes squared Euclidean distance, to save time in vrute force approach
+    :param soln: numpy array of the proposed route, with columns [city number, X coordinate, Y coordinate]
+    :return: Sum of Euclidean distances for each segment
+    """
+    dist = 0.
+    for i in range(soln.shape[0]):
+        path_dist = 0.
+        if i == soln.shape[0] - 1: path_dist = (soln[0,1] - soln[i,1])**2 + (soln[0,2] - soln[i,2])**2
+        else: path_dist = (soln[i+1,1] - soln[i,1])**2 + (soln[i+1,2] - soln[i,2])**2
         dist += path_dist
     return dist
 
