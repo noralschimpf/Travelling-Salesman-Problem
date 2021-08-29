@@ -1,7 +1,7 @@
 import numpy as np
 import tqdm
 import itertools
-from utils import euclid_partial as euclid
+from utils import euclid_partial, euclidean_distance
 
 def RandomApproach(data: np.array):
     soln = np.zeros_like(data)
@@ -27,13 +27,15 @@ def BruteForce(data: np.array):
     for i in range(nda_perm.shape[0]):
         tmp_soln = np.zeros_like(soln)
         tmp_soln[:,0] = nda_perm[i]
-        tmp_soln[:,1:] = [data[np.where(data == tmp_soln[x,0])[0],1:] for x in range(tmp_soln.shape[0])]
-        costs[i] = euclid(tmp_soln)
+        tmp_soln[:,1:] = [data[np.where(data == tmp_soln[x,0])[0],1:]
+                          for x in range(tmp_soln.shape[0])]
+        costs[i] = euclidean_distance(tmp_soln)
         del tmp_soln
 
     soln_idx = np.argmin(costs)
     soln[:,0] = nda_perm[soln_idx]
-    soln[:,1:] = [data[np.where(data == soln[x,0])[0],1:] for x in range(soln.shape[0])]
+    soln[:,1:] = [data[np.where(data == soln[x,0])[0],1:]
+                  for x in range(soln.shape[0])]
     return soln
 
 def CleanerBruteForce(data: np.array):
@@ -50,8 +52,9 @@ def CleanerBruteForce(data: np.array):
     for i, permutation in tqdm.tqdm(enumerate(gen_perm), total=gen_length):
         tmp_soln = np.zeros_like(soln)
         tmp_soln[:, 0] = permutation
-        tmp_soln[:, 1:] = [data[np.where(data == tmp_soln[x, 0])[0], 1:] for x in range(tmp_soln.shape[0])]
-        costs[i] = euclid(tmp_soln)
+        tmp_soln[:, 1:] = [data[np.where(data == tmp_soln[x, 0])[0], 1:]
+                           for x in range(tmp_soln.shape[0])]
+        costs[i] = euclidean_distance(tmp_soln)
         if np.nanmin(costs) == costs[i]: soln = tmp_soln
     return soln
 
@@ -68,6 +71,6 @@ def OptimizedBruteForce(data: np.array):
     min_cost = np.nan
     for i, permutation in tqdm.tqdm(enumerate(gen_perm), total=perm_length):
         tmp_soln = data[[x-1 for x in permutation]]
-        cost = euclid(tmp_soln)
+        cost = euclid_partial(tmp_soln)
         if cost < min_cost or np.isnan(min_cost): min_cost = cost; soln = tmp_soln
     return soln
