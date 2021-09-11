@@ -3,7 +3,7 @@ import tqdm
 import itertools
 from utils import euclid_partial, euclidean_distance
 
-def RandomApproach(data: np.array):
+def RandomApproach(data: np.array, restrictions: dict):
     soln = np.zeros_like(data)
 
     # Select initial point at random
@@ -16,7 +16,7 @@ def RandomApproach(data: np.array):
 
     return soln
 
-def BruteForce(data: np.array):
+def BruteForce(data: np.array, restrictions: dict):
     soln = np.zeros_like(data)
 
     # generate a matrix of all permutations of points
@@ -38,7 +38,7 @@ def BruteForce(data: np.array):
                   for x in range(soln.shape[0])]
     return soln
 
-def CleanerBruteForce(data: np.array):
+def CleanerBruteForce(data: np.array, restrictions: dict):
     soln = np.zeros_like(data)
 
     # generate a matrix of all permutations of points
@@ -58,7 +58,7 @@ def CleanerBruteForce(data: np.array):
         if np.nanmin(costs) == costs[i]: soln = tmp_soln
     return soln
 
-def OptimizedBruteForce(data: np.array):
+def OptimizedBruteForce(data: np.array, restrictions: dict):
     soln = np.zeros_like(data)
 
     # generate a matrix of all permutations of points

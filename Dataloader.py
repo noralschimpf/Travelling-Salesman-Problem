@@ -1,5 +1,8 @@
 import csv, os, numpy as np
 
+prj2_restrictions = {'1': [2, 3, 4], '2': [3], '3': [4, 5], '4': [5, 6, 7], '5': [7, 8],
+                     '6': [8], '7': [9, 10], '8': [9, 10], '9': [11], '10': [11], '11':[8,9,10]}
+
 def load_tsp(path):
     file = open(path, newline='')
     csvrd = csv.reader(file, delimiter=' ')
