@@ -3,10 +3,11 @@ import Dataloader as dl
 from Structures.node import Node
 from Algos import randApproach as alg_simple
 from Algos import uninformedSearch as alg_uninformed
+from Algos import HeuristicSearch as heur
 from utils import report, sortByComplexity
 
-# datadir = os.path.join(os.path.abspath('.'), 'Data', 'General')
-datadir = os.path.join(os.path.abspath('.'), 'Data', 'Prj2Data')
+datadir = os.path.join(os.path.abspath('.'), 'Data', 'General')
+# datadir = os.path.join(os.path.abspath('.'), 'Data', 'Prj2Data')
 restrictions = None
 
 Requires_initNode = ['DepthFirstSearch_Tree', 'IterativeDepthSearch']
@@ -14,19 +15,24 @@ Requires_initNode = ['DepthFirstSearch_Tree', 'IterativeDepthSearch']
 if 'Prj2Data' in datadir:
     restrictions = dl.prj2_restrictions
     loop = False
-    prj2 = True
+    scalems = True
+    cpxSort = False
+else:
+    loop = True
+    scalems = False
+    cpxSort = True
 
 DEBUG = False
 
 def main(algo):
     # load relevant TSP data
     files = os.listdir(datadir)
-    # files = sortByComplexity(files)
+    if cpxSort: files = sortByComplexity(files)
     for f in range(len(files)):
         if DEBUG and 'General' in datadir: files[f] = 'Random4.tsp'
         dict_data = dl.load_tsp(os.path.join(datadir,files[f]))
         print(dict_data['NAME'])
-        traceflag = f <= 4 or prj2
+        traceflag = f <= 4
         if traceflag: tracemalloc.start()
         sttime = time.time()
         if traceflag: stcur, stpeak = tracemalloc.get_traced_memory()
@@ -46,7 +52,7 @@ def main(algo):
 
         metrics = {'time': edtime - sttime, 'memory': edpeak/1000}
         soln = {'name': algo.__name__, 'soln': opt_soln}
-        report(dict_data, soln, metrics, loop=loop, scalems=prj2)
+        report(dict_data, soln, metrics, loop=loop, scalems=scalems)
 
 
 
@@ -57,5 +63,5 @@ def main(algo):
 
 if __name__ == '__main__':
     # Test all search algorithms from alg_uninformed (project 2 algorithsm)
-    lab2_algos = [x for name, x in alg_uninformed.__dict__.items() if callable(x) and 'Search' in name]
-    for alg in lab2_algos: main(alg)
+    lab3_algos = [x for name, x in heur.__dict__.items() if callable(x) and 'Search' in name]
+    for alg in lab3_algos: main(alg)

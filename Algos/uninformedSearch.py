@@ -1,15 +1,6 @@
 import numpy as np
+from utils import isEnd
 from Structures.node import Node
-
-def isEnd(state, endstate):
-    """
-    Goal-State Check
-    :param state: state of current node
-    :return: boolean of whether the goal is met
-    """
-    if state[0] == endstate[0]: return True
-    else: return False
-
 
 def BreadthFirstSearch(data: np.array, restrictions: dict, status: dict, goaltest=isEnd):
     """

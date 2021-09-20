@@ -49,6 +49,37 @@ def euclid_partial(soln: np.array):
         dist += path_dist
     return dist
 
+def DistFromLines(point: np.array, route: np.array):
+    """
+    Calculates distance of a point from each line segment in the current route
+    d = |(x2-x1)(y1-y0) - (x1-x0)(y2-y1)| / sqrt((x2-x1)^2 + (y2-y1)^2)
+    x0, y0: coordinates of point
+    x/y1, x/y2: coordinates of line segment start and end
+    eqn. from: https://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html
+    :param point: state of point (city number, x, y)
+    :param route: current route as matrix of rows (city number, x, y)
+    :return: distance of last segment (initial draft)
+    """
+
+    dists = []
+    if len(route.shape) < 2:
+        return euclidean_distance(np.vstack((point,route)),loop=False)
+    else:
+        for i in range(route.shape[0]-1):
+            dists.append(np.abs((route[i+1, 1] - route[i, 1])*(route[i, 2] - point[2]) -
+                                 (route[i, 1] - point[1])*(route[i+1, 2] - route[i, 2])) /
+                          euclidean_distance(np.vstack((route[i], route[i+1])), loop=False))
+    return dists[0]
+
+def isEnd(state, endstate):
+    """
+    Goal-State Check
+    :param state: state of current node
+    :return: boolean of whether the goal is met
+    """
+    if state[0] == endstate[0]: return True
+    else: return False
+
 
 
 def report(data: dict, soln: dict, metrics: dict,loop=True, scalems=False):
