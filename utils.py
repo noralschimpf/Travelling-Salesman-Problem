@@ -1,6 +1,11 @@
 import numpy as np, matplotlib.pyplot as plt, os
+from matplotlib.animation import FuncAnimation, writers
 import re
 from numba import jit
+from functools import partial
+import warnings
+
+FPS = 5
 
 def sortByComplexity(files: list):
     """
@@ -49,6 +54,47 @@ def euclid_partial(soln: np.array):
         dist += path_dist
     return dist
 
+def shortest_dist(point: np.ndarray, segment: np.ndarray):
+    """
+    Calculates the shortest distance between a point an given line segment
+    Calculation based on
+    https://math.stackexchange.com/questions/2248617/shortest-distance-between-a-point-and-a-line-segment
+    :param point: shape (1,3) containing (city, x, y)
+    :param segment: shape (2,3) containing (city, x, y)
+    :return: the length of the line perpendicular to the segment (if it intersects the segment)
+              OR the distance to the nearest endpoint of the segment
+              also return a bias, shifting the placement of the node
+    """
+    # Calculating the ratio of the dot product between the point and segment v. the segment length-squared identifies
+    #   the perpendicular (theoretically shortest path) intersects
+    with warnings.catch_warnings(record=True) as w:
+        seglen = (segment[1,1]-segment[0,1])**2 + (segment[1,2]-segment[0,2])**2
+        if seglen == 0: return (euclidean_distance(np.vstack((point,segment[0])),loop=False), 0)
+        t = -1*(
+                (
+                 ((segment[0,1]-point[1]) * (segment[1,1]-segment[0,1])) +
+                 ((segment[0,2]-point[2])*(segment[1,2]-segment[0,2]))
+                ) / seglen)
+        if not w is None:
+            if len(w) == 1 and issubclass(w[0].category, RuntimeWarning):
+                print("invalid value {} calculating for pt {} to segment {}-{}".format(t, point[0], segment[0,0], segment[1,0]))
+
+    if t >= 0 and t <= 1:
+        # if the theoretically shortest holds, it is calculated by the cross-product (s2-s1)x(s1-p)
+        #   divided by the magnitude of the segment
+        d = np.abs(
+                   (
+                    ((segment[1, 1] - segment[0, 1])*(segment[0, 2] - point[2])) -
+                    ((segment[1, 2] - segment[0,2])*(segment[0, 1] - point[1]))
+                   )
+                  ) / euclidean_distance(segment, loop=False)
+        return (d, 1)
+    else:
+        # if the theoretically shortest length does not hold, return the nearest endpoint of the segment
+        p_dists = [euclidean_distance(np.vstack((point,x)),loop=False) for x in segment]
+        mindist = min(p_dists); bias = 0 if mindist == p_dists[0] else 2
+        return (min(p_dists), bias)
+
 def DistFromLines(point: np.array, route: np.array):
     """
     Calculates distance of a point from each line segment in the current route
@@ -61,15 +107,26 @@ def DistFromLines(point: np.array, route: np.array):
     :return: distance of last segment (initial draft)
     """
 
-    dists = []
-    if len(route.shape) < 2:
-        return euclidean_distance(np.vstack((point,route)),loop=False)
+    dists = [] # Distances from each line segment
+    biases = [] # Distances from each point on the route
+    if route.shape[0] < 2:
+        dists.append(euclidean_distance(np.vstack((point,route)),loop=False))
+        return (dists[0], 0)
     else:
-        for i in range(route.shape[0]-1):
-            dists.append(np.abs((route[i+1, 1] - route[i, 1])*(route[i, 2] - point[2]) -
-                                 (route[i, 1] - point[1])*(route[i+1, 2] - route[i, 2])) /
-                          euclidean_distance(np.vstack((route[i], route[i+1])), loop=False))
-    return dists[0]
+        for i in range(route.shape[0]):
+            if i < len(route)-1:
+                dists.append(shortest_dist(point, route[i:i+2]))
+
+    biases = [x[1] for x in dists]; dists = [x[0] for x in dists]
+    mindist = min(dists)
+    idxmin_seg = [i for i in range(len(dists)) if dists[i] == mindist][0]
+    idxmin_pt = idxmin_seg + biases[idxmin_seg]
+    # if ptdists[idxmin_pt] > ptdists[idxmin_pt+1]: idxmin_pt += 1
+    # if idxmin_pt == len(route)+1: idxmin_pt -= 1
+    if idxmin_pt == 0: idxmin_pt += 1
+    return (mindist, idxmin_pt)
+    # return (dists[-1], -1)
+
 
 def isEnd(state, endstate):
     """
@@ -81,8 +138,15 @@ def isEnd(state, endstate):
     else: return False
 
 
+def route_animate(soln_frame, route, loop):
+    if loop: soln_frame = np.vstack((soln_frame, soln_frame[0]))
+    route.set_xdata(soln_frame[:,1])
+    route.set_ydata(soln_frame[:,2])
+    # route.set_data(x,y)
 
-def report(data: dict, soln: dict, metrics: dict,loop=True, scalems=False):
+
+
+def report(data: dict, soln: dict, metrics: dict,loop=True, scalems=False, animate=False):
     """
     Generates report figure of proposed route
     :param data: dictionary containing the cities, problem name, and any miscellaneous information
@@ -100,3 +164,4 @@ def report(data: dict, soln: dict, metrics: dict,loop=True, scalems=False):
     fig.suptitle('TSP {} (Dim: {})\ncost: {:.3f}   time:{:.3f} {}s   mem: {:.3f} KB'.format(soln['name'], data['DIMENSION'],cost, metrics['time']*scale, 'm' if scalems else '', metrics['memory']))
     if not os.path.isdir('Figures/{}'.format(soln['name'])): os.makedirs('Figures/{}'.format(soln['name']))
     fig.savefig('Figures/{}/{}.png'.format(soln['name'], data['NAME']), dpi=300)
+    fig.clf(); ax.cla(); plt.close()
