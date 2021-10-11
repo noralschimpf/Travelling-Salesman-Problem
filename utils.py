@@ -160,6 +160,7 @@ def report(data: dict, soln: dict, metrics: dict,loop=True, scalems=False, anima
     nda_dat = data['data']; nda_soln = soln['soln']
     if loop: nda_soln = np.concatenate((nda_soln, nda_soln[0].reshape(1,-1)))
     ax.scatter(nda_dat[:,1], nda_dat[:,2], color='r')
+    [ax.annotate(str(int(nda_dat[i,0])), (nda_dat[i,1]+0.3, nda_dat[i,2]+0.2)) for i in range(len(nda_dat))]
     ax.plot(nda_soln[:,1], nda_soln[:,2], color='b')
     fig.suptitle('TSP {} (Dim: {})\ncost: {:.3f}   time:{:.3f} {}s   mem: {:.3f} KB'.format(soln['name'], data['DIMENSION'],cost, metrics['time']*scale, 'm' if scalems else '', metrics['memory']))
     if not os.path.isdir('Figures/{}'.format(soln['name'])): os.makedirs('Figures/{}'.format(soln['name']))

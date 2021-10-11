@@ -1,5 +1,5 @@
 import numpy as np
-from utils import isEnd, DistFromLines, DistFromLinesLASTSEG,route_animate, FPS
+from utils import isEnd, DistFromLines, route_animate, FPS
 from Structures.node import Node
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation, writers
@@ -32,15 +32,20 @@ def GreedyNodeUCS(data: np.array, restrictions: dict, status: dict, goaltest=isE
             if animate:
                 fig, ax = plt.subplots()
                 ax.scatter(data[:, 1], data[:, 2], color='r')
+                [ax.annotate(str(int(data[i, 0])), (data[i, 1] + 0.3, data[i, 2] + 0.2)) for i in
+                 range(len(data))]
+                title = '{} (Dim: {})'.format(GreedyNodeUCS.__name__, len(data))
+                ax.set_title(title)
                 line = ax.plot(data[0, 1], data[0, 2])[0]
                 animation = FuncAnimation(fig, func=route_animate, fargs=(line,True), frames=frames)
                 Writer = writers['ffmpeg']
                 writer = Writer(fps=FPS, metadata={'artist': 'Me'}, bitrate=1800)
-                animation.save('Figures/{}/concorde{}.mov'.format(GreedyNodeUCS.__name__, len(data)), writer)
+                animation.save('Figures/{}/concorde{}.mp4'.format(GreedyNodeUCS.__name__, len(data)), writer)
                 fig.clf();
                 ax.cla();
                 plt.close()
-            return node.unwrap_parents()
+            return np.vstack((node.unwrap_parents(),node.unwrap_parents()[0]))
+
         # select the node with the smallest path cost
         target_cost = min([x.path_cost for x in frontier])
         argmin = [i for i,x in enumerate(frontier) if x.path_cost == target_cost][0]
@@ -68,11 +73,15 @@ def GreedyLineSearch_LASTSEG(data: np.array, restrictions: dict, status: dict, g
             if animate:
                 fig, ax = plt.subplots()
                 ax.scatter(data[:, 1], data[:, 2], color='r')
+                [ax.annotate(str(int(data[i, 0])), (data[i, 1] + 0.3, data[i, 2] + 0.2)) for i in
+                 range(len(data))]
+                title = '{} (Dim: {})'.format(GreedyLineSearch_LASTSEG.__name__, len(data))
+                ax.set_title(title)
                 line = ax.plot(data[0, 1], data[0, 2])[0]
                 animation = FuncAnimation(fig, func=route_animate, fargs=(line,True), frames=frames)
                 Writer = writers['ffmpeg']
                 writer = Writer(fps=FPS, metadata={'artist': 'Me'}, bitrate=1800)
-                animation.save('Figures/{}/concorde{}.mov'.format(GreedyLineSearch_LASTSEG.__name__, len(data)),
+                animation.save('Figures/{}/concorde{}.mp4'.format(GreedyLineSearch_LASTSEG.__name__, len(data)),
                                writer)
                 fig.clf();
                 ax.cla();
@@ -110,10 +119,14 @@ def GreedyLineSearch_MIN(data: np.array, restrictions: dict, status: dict, goalt
                 fig, ax = plt.subplots()
                 ax.scatter(data[:, 1], data[:, 2], color='r')
                 line = ax.plot(data[0, 1], data[0, 2])[0]
+                [ax.annotate(str(int(data[i, 0])), (data[i, 1] + 0.3, data[i, 2] + 0.2)) for i in
+                 range(len(data))]
+                title = '{} (Dim: {})'.format(GreedyLineSearch_MIN.__name__, len(data))
+                ax.set_title(title)
                 animation = FuncAnimation(fig, func=route_animate, fargs=(line,True), frames=frames)
                 Writer = writers['ffmpeg']
                 writer = Writer(fps=FPS, metadata={'artist': 'Me'}, bitrate=1800)
-                animation.save('Figures/{}/concorde{}.mov'.format(GreedyLineSearch_MIN.__name__, len(data)), writer)
+                animation.save('Figures/{}/concorde{}.mp4'.format(GreedyLineSearch_MIN.__name__, len(data)), writer)
                 fig.clf();
                 ax.cla();
                 plt.close()
