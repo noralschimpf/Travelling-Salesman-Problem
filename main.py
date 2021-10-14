@@ -63,6 +63,6 @@ def main(algo):
 
 if __name__ == '__main__':
     # Test all search algorithms from alg_uninformed (project 2 algorithsm)
-    # lab3_algos = [x for name, x in heur.__dict__.items() if callable(x) and 'Greedy' in name]
-    # for alg in lab3_algos: main(alg)
-    main(heur.GreedyLineSearch_LASTSEG)
+    lab3_algos = [x for name, x in heur.__dict__.items() if callable(x) and 'Greedy' in name]
+    for alg in lab3_algos: main(alg)
+    # main(heur.GreedyLineSearch_LASTSEG)
