@@ -4,9 +4,11 @@ from Structures.node import Node
 from Algos import randApproach as alg_simple
 from Algos import uninformedSearch as alg_uninformed
 from Algos import HeuristicSearch as heur
+from Algos import GeneticAlgo as gen
+import GeneticFns
 from utils import report, sortByComplexity
 
-datadir = os.path.join(os.path.abspath('.'), 'Data', 'General')
+datadir = os.path.join(os.path.abspath('.'), 'Data', 'Prj4Data')
 # datadir = os.path.join(os.path.abspath('.'), 'Data', 'Prj2Data')
 restrictions = None
 
@@ -21,10 +23,12 @@ else:
     loop = False
     scalems = False
     cpxSort = True
+if 'Prj4Data' in datadir:
+    Prj4 = True
 
 DEBUG = False
 
-def main(algo):
+def main(algo, params: dict = None):
     # load relevant TSP data
     files = os.listdir(datadir)
     if cpxSort: files = sortByComplexity(files)
@@ -32,27 +36,31 @@ def main(algo):
         # if DEBUG and 'General' in datadir: files[f] = 'Random4.tsp'
         dict_data = dl.load_tsp(os.path.join(datadir,files[f]))
         print(dict_data['NAME'])
-        traceflag = f <= 4
-        if traceflag: tracemalloc.start()
-        sttime = time.time()
-        if traceflag: stcur, stpeak = tracemalloc.get_traced_memory()
-        if algo.__name__ in Requires_initNode:
-            node_init = Node(parent=None, state=dict_data['data'][0], children=restrictions['1'])
-            opt_soln = algo(node=node_init, data=dict_data['data'], restrictions=restrictions, status={'cutoff': False, 'failure': False, 'limit': -1}, animate=not DEBUG)
-        else: opt_soln = algo(dict_data['data'], restrictions, {'cutoff': False, 'failure': False, 'limit': -1}, animate=not DEBUG)
-        if traceflag:
-            edcur, edpeak = tracemalloc.get_traced_memory()
-        else: edpeak = -1000
-        edtime = time.time()
-        tracemalloc.stop()
 
-        if isinstance(opt_soln, dict):
-            print("{alg} failed:\t\t\t{dict}".format(alg=algo.__name__, dict=opt_soln))
-            return
+        if Prj4:
+            algo(dict_data, {}, {}, params)
+        else:
+            traceflag = f <= 4
+            if traceflag: tracemalloc.start()
+            sttime = time.time()
+            if traceflag: stcur, stpeak = tracemalloc.get_traced_memory()
+            if algo.__name__ in Requires_initNode:
+                node_init = Node(parent=None, state=dict_data['data'][0], children=restrictions['1'])
+                opt_soln = algo(node=node_init, data=dict_data['data'], restrictions=restrictions, status={'cutoff': False, 'failure': False, 'limit': -1}, animate=not DEBUG)
+            else: opt_soln = algo(dict_data['data'], restrictions, {'cutoff': False, 'failure': False, 'limit': -1}, animate=not DEBUG)
+            if traceflag:
+                edcur, edpeak = tracemalloc.get_traced_memory()
+            else: edpeak = -1000
+            edtime = time.time()
+            tracemalloc.stop()
 
-        metrics = {'time': edtime - sttime, 'memory': edpeak/1000}
-        soln = {'name': algo.__name__, 'soln': opt_soln}
-        report(dict_data, soln, metrics, loop=loop, scalems=scalems)
+            if isinstance(opt_soln, dict):
+                print("{alg} failed:\t\t\t{dict}".format(alg=algo.__name__, dict=opt_soln))
+                return
+
+            metrics = {'time': edtime - sttime, 'memory': edpeak/1000}
+            soln = {'name': algo.__name__, 'soln': opt_soln}
+            report(dict_data, soln, metrics, loop=loop, scalems=scalems)
 
 
 
@@ -63,6 +71,10 @@ def main(algo):
 
 if __name__ == '__main__':
     # Test all search algorithms from alg_uninformed (project 2 algorithsm)
-    lab3_algos = [x for name, x in heur.__dict__.items() if callable(x) and 'Greedy' in name]
-    for alg in lab3_algos: main(alg)
-    # main(heur.GreedyLineSearch_LASTSEG)
+    lab4_fits = [x for name, x in GeneticFns.__dict__.items() if callable(x) and 'fit_' in name]
+    lab4_fits = [lab4_fits[1]]
+    lab4_crossses = [x for name, x in GeneticFns.__dict__.items() if callable(x) and 'cross_' in name]
+    for fit in lab4_fits:
+        for cross in lab4_crossses:
+            main(gen.GA_Simulate, {'k': 100, 'g': 500, 'f_fit': fit, 'f_cross': cross, 'f_mut': GeneticFns.mut_neighbor_swap,
+                                   'n': 3, 'animate': False})
