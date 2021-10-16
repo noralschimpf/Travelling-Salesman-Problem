@@ -72,9 +72,10 @@ def main(algo, params: dict = None):
 if __name__ == '__main__':
     # Test all search algorithms from alg_uninformed (project 2 algorithsm)
     lab4_fits = [x for name, x in GeneticFns.__dict__.items() if callable(x) and 'fit_' in name]
-    lab4_fits = [lab4_fits[1]]
     lab4_crossses = [x for name, x in GeneticFns.__dict__.items() if callable(x) and 'cross_' in name]
     for fit in lab4_fits:
         for cross in lab4_crossses:
-            main(gen.GA_Simulate, {'k': 100, 'g': 500, 'f_fit': fit, 'f_cross': cross, 'f_mut': GeneticFns.mut_neighbor_swap,
-                                   'n': 3, 'animate': False})
+            # if 'intersect' in fit.__name__ and 'prob' in cross.__name__:
+            print("GA {} {}".format(fit.__name__, cross.__name__))
+            main(gen.GA_Simulate, {'k': 100, 'g': 10000, 'f_fit': fit, 'f_cross': cross, 'f_mut': GeneticFns.mut_neighbor_swap,
+                                   'n': 100, 'animate': True})

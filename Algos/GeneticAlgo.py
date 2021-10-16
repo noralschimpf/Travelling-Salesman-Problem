@@ -18,6 +18,7 @@ def geneticAlgo(data: np.array, restrictions: dict, status: dict, params: dict):
     {k: population size,g: generations, f_fit: fitness function, f_cross: crossover function, f_mut: mutation function}
     :return:
     '''
+    frames = []
     # Generate k random samples for the population
     tmp = data[:,0].astype(int)
     idx = np.arange(params['k'])
@@ -34,10 +35,20 @@ def geneticAlgo(data: np.array, restrictions: dict, status: dict, params: dict):
         fit = np.array([params['f_fit'](data[x-1]) for x in population])
         best_fits[g] = min(fit)
 
-        fit_prob_inverse = fit / np.sum(fit)
+        # Append best route of generation to animation
+        if params['animate'] and g % 50 == 0:
+            idx_best = [i for i in range(len(fit)) if fit[i] == best_fits[g]][0]
+            best_route = population[idx_best]
+            frames.append(data[best_route - 1])
+
+        # fit_prob_inverse = fit / np.sum(fit)
         #   Assign probabilities by mapping scores to a linear scale -1 - 0, then invert
-        fit = -1*(fit - max(fit))
-        fit = fit / np.sum(fit)
+        # fit = -1*(fit - max(fit))
+        # fit = fit / np.sum(fit)
+        scl = MinMaxScaler(feature_range=(-1,0))
+        fit = abs(scl.fit_transform(fit.reshape(-1,1)))
+        fit = (fit / sum(fit)).reshape(-1)
+
 
 
         # Select and "breed" pairs
@@ -49,7 +60,7 @@ def geneticAlgo(data: np.array, restrictions: dict, status: dict, params: dict):
         # Mutate pairs
         population = np.array([params['f_mut'](population[i]) for i in range(params['k'])])
     return {'soln': data[population[np.where(fit == min(fit))] - 1][0],
-            'training': best_fits}
+            'training': best_fits, 'frames': frames}
 
 
 
@@ -73,13 +84,27 @@ def GA_Simulate(data: dict, restrictions: dict, status: dict, params: dict):
 
     sttime = time.time()
     for i in tqdm.trange(params['n']):
+        if i == 1: params['animate'] = False
         soln_dict = geneticAlgo(data['data'], restrictions, status, params)
+
+        # Generate Animation
+        if params['animate']:
+            fig, ax = plt.subplots(1, 1)
+            ax.scatter(nda_data[:, 1], nda_data[:, 2], color='r')
+            [ax.annotate(str(int(nda_data[i, 0])), (nda_data[i, 1] + 0.3, nda_data[i, 2] + 0.2)) for i in
+             range(len(nda_data))]
+            ax.set_title(GA_Name)
+            line = ax.plot(nda_data[0, 1], nda_data[0, 2])[0]
+            animation = FuncAnimation(fig, func=route_animate, fargs=(line, True), frames=soln_dict['frames'])
+            Writer = writers['ffmpeg']
+            writer = Writer(fps=FPS, metadata={'artist': 'Me'}, bitrate=1800)
+            animation.save('Figures/{}/concorde{}.mp4'.format(GA_Name, len(nda_data)), writer)
+            fig.clf();
+            ax.cla();
+            plt.close()
 
         # Add solution to memory
         fit_curves[i] = soln_dict['training']
-
-        # add frame to animation using returned solution route
-        frames.append(np.vstack((soln_dict['soln'], soln_dict['soln'][0])))
 
         # track best solution, plot if last iteration
         soln_fits[i] = euclidean_distance(soln_dict['soln'], loop=True)
@@ -118,17 +143,3 @@ def GA_Simulate(data: dict, restrictions: dict, status: dict, params: dict):
     fig_train.suptitle("TSP {} (Dim: {})\nPopulation: {}".format(GA_Name, data['DIMENSION'], len(fit_curves)))
     fig_train.savefig("Figures/{}/train.png".format(GA_Name), dpi=300)
     fig_train.clf(); ax_train.cla(); plt.close()
-
-    #Generate Animation
-    if params['animate']:
-        fig, ax = plt.subplots(1,1)
-        ax.scatter(nda_data[:, 1], nda_data[:, 2], color='r')
-        [ax.annotate(str(int(nda_data[i, 0])), (nda_data[i, 1] + 0.3, nda_data[i, 2] + 0.2)) for i in
-         range(len(nda_data))]
-        ax.set_title(GA_Name)
-        line = ax.plot(nda_data[0, 1], nda_data[0, 2])[0]
-        animation = FuncAnimation(fig, func=route_animate, fargs=(line, True), frames=frames)
-        Writer = writers['ffmpeg']
-        writer = Writer(fps=FPS, metadata={'artist': 'Me'}, bitrate=1800)
-        animation.save('Figures/{}/concorde{}.mp4'.format(GA_Name, len(nda_data)), writer)
-        fig.clf(); ax.cla(); plt.close()

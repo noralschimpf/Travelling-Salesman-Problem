@@ -5,7 +5,8 @@ from numba import jit
 from functools import partial
 import warnings
 
-FPS = 5
+FPS = 15
+MAXTHREAD = 6
 
 def sortByComplexity(files: list):
     """
@@ -23,6 +24,7 @@ def sortByComplexity(files: list):
     f_sorted = [files[x] for x in argsorted]
     return f_sorted
 
+@jit(nopython=True, cache=True)
 def euclidean_distance(soln: np.array, loop: bool = True):
     """
     Computes the total Euclidean distance of a proposed route
