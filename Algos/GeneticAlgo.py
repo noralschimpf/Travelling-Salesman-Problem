@@ -36,28 +36,22 @@ def geneticAlgo(data: np.array, restrictions: dict, status: dict, params: dict):
         best_fits[g] = min(fit)
 
         # Append best route of generation to animation
-        if params['animate'] and g % 50 == 0:
+        if params['animate'] and g % 10 == 0:
             idx_best = [i for i in range(len(fit)) if fit[i] == best_fits[g]][0]
             best_route = population[idx_best]
             frames.append(data[best_route - 1])
 
-        # fit_prob_inverse = fit / np.sum(fit)
         #   Assign probabilities by mapping scores to a linear scale -1 - 0, then invert
-        # fit = -1*(fit - max(fit))
-        # fit = fit / np.sum(fit)
         scl = MinMaxScaler(feature_range=(-1,0))
         fit = abs(scl.fit_transform(fit.reshape(-1,1)))
         fit = (fit / sum(fit)).reshape(-1)
-
-
 
         # Select and "breed" pairs
         #   Select pairs according to their probability
         pairs = [np.random.choice(idx, p=fit) for x in range(params['k']*2)]
         pair1, pair2 = population[pairs[:params['k']]],population[pairs[params['k']:]]
-        #   Merge pairs via crossover function
+        #   Merge and mutate pairs
         population = np.array([params['f_cross'](pair1[i], pair2[i]) for i in range(params['k'])])
-        # Mutate pairs
         population = np.array([params['f_mut'](population[i]) for i in range(params['k'])])
     return {'soln': data[population[np.where(fit == min(fit))] - 1][0],
             'training': best_fits, 'frames': frames}
@@ -98,6 +92,7 @@ def GA_Simulate(data: dict, restrictions: dict, status: dict, params: dict):
             animation = FuncAnimation(fig, func=route_animate, fargs=(line, True), frames=soln_dict['frames'])
             Writer = writers['ffmpeg']
             writer = Writer(fps=FPS, metadata={'artist': 'Me'}, bitrate=1800)
+            if not os.path.isdir('Figures/{}'.format(GA_Name)): os.makedirs('Figures/{}'.format(GA_Name))
             animation.save('Figures/{}/concorde{}.mp4'.format(GA_Name, len(nda_data)), writer)
             fig.clf();
             ax.cla();

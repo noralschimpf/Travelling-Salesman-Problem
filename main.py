@@ -77,5 +77,5 @@ if __name__ == '__main__':
         for cross in lab4_crossses:
             # if 'intersect' in fit.__name__ and 'prob' in cross.__name__:
             print("GA {} {}".format(fit.__name__, cross.__name__))
-            main(gen.GA_Simulate, {'k': 100, 'g': 10000, 'f_fit': fit, 'f_cross': cross, 'f_mut': GeneticFns.mut_neighbor_swap,
-                                   'n': 100, 'animate': True})
+            main(gen.GA_Simulate, {'k': 1000, 'g': 600, 'f_fit': fit, 'f_cross': cross, 'f_mut': GeneticFns.mut_neighbor_swap,
+                                   'n': 200, 'animate': False})

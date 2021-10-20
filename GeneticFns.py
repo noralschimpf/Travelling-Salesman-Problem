@@ -43,7 +43,8 @@ def is_intersect(seg1: np.array, seg2: np.array):
     :return:
     """
     # if seg1_x's between seg2_x's and seg2
-    if ccw(seg1[0],seg2[0],seg2[1]) != ccw(seg1[1],seg2[0],seg2[1]) and ccw(seg1[0],seg1[1],seg2[0]) != ccw(seg1[0],seg1[1],seg2[1]):
+    if ccw(seg1[0],seg2[0],seg2[1]) != ccw(seg1[1],seg2[0],seg2[1]) and \
+            ccw(seg1[0],seg1[1],seg2[0]) != ccw(seg1[0],seg1[1],seg2[1]):
         return 1
     else: return 0
 
@@ -92,12 +93,11 @@ def cross_p_point(pair1, pair2, p=1):
     :param p: number of cross points
     :return: single list
     """
-    crosspoints = np.random.choice(np.arange(len(pair1)), size=p, replace=False)
-    crosspoints.sort()
-    crosspoints = np.array([int(len(pair1)/2)])
+    crosspoints = np.arange(0,len(pair1)+1,int(len(pair1)/p+1))
+    crosspoints = crosspoints[1:-1]
     combo = pair1
     for i in range(len(crosspoints) - 1):
-        if i % 2 == 0: combo[crosspoints[i]:crosspoints[i+1]] = -1
+        if i % 2 == 1: combo[crosspoints[i]:crosspoints[i+1]] = -1
     if len(crosspoints) == 1:
         combo[crosspoints[0]:] = -1
     missing_vals = set(pair2) - set(pair1)
@@ -136,7 +136,6 @@ def setdif(a, b):
 
 @jit(nopython=True)
 def mut_neighbor_swap(city_order):
-    swap_positions = np.random.choice(range(len(city_order)), size=2, replace=False)
     mutations = [True if np.random.uniform(0,1) <= .01 else False for i in range(len(city_order))]
     for i in range(len(city_order)-1):
         if mutations[i]:
